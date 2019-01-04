@@ -47,6 +47,8 @@ COLORS = {
     'light_gray': (0.7,0.7,0.7),
     'orange': (1.0, 0.647, 0),
     'purple': (0.627, 0.125, 0.941),
+    'pink': (0.941, 0.561, 0.631),
+    'cyan': (0.0, 1.000, 1.000),
     'red': (0.8, 0, 0),
     'royal_blue': (0.255, 0.412, 0.882),
     'white': (1.0, 1.0, 1.0),
@@ -171,9 +173,9 @@ ELEMENT_COLORS = {
     24: 'dark_gray',
     25: 'dark_gray',
     26: 'dark_gray',
-    27: 'dark_gray',
+    27: 'purple',
     28: 'dark_gray',
-    29: 'dark_gray',
+    29: 'cyan',
     30: 'dark_gray',
     31: 'dark_gray',
     32: 'dark_gray',
@@ -234,7 +236,7 @@ class Atom:
         self.id_num = id_num
 
     def draw(self, color='by_element', radius=None, units='nm', 
-             scale=1.0, subsurf_level=2, segments=16):
+             scale=1.0, subsurf_level=2, segments=32):
         """Draw the atom in Blender.
 
         Args:
@@ -248,7 +250,7 @@ class Atom:
                 when generating ball-and-stick models.
             subsurf_level (int, =2): Subsurface subdivisions that will
             	be applied.
-            segments (int, =16): Number of segments in each UV sphere
+            segments (int, =32): Number of segments in each UV sphere
                 primitive
 
         Returns:
