@@ -1,4 +1,5 @@
-"""Scripts for loading molecular geometries into Blender.
+"""
+    Scripts for loading molecular geometries into Blender.
 
     Main use is to define the "molecule" object, which can be used to
     draw models of molecular coordinates.
@@ -18,6 +19,17 @@
     His project is hosted here:
 
     https://github.com/patrickfuller/blender-chemicals
+    
+    
+    A few additions by Michael Böhme:
+        - support of more elements
+        - support of xyz files
+        - balls and sticks drawing model via draw_balls_and_sticks()
+        - error messages in read_pdb() and read_xyz() functions
+    
+    Improved version of blmol hosted here:
+    https://github.com/micb25/blmol
+        
 """
 
 import numpy as np, time
@@ -605,10 +617,18 @@ class Molecule:
             
         print("{} seconds".format(time.time()-start_time))
         return
+    
+        
+    def draw_ball_and_stick(self, color='by_element', units='nm', join=True,
+                              with_H=True):
+        
+        self.draw_atoms(scale=0.25, color=color, units=units, join=join, with_H=with_H)
+        self.draw_bonds(radius=0.15, color=color, units=units, join=join, with_H=with_H)
 
 
     def read_pdb(self, filename):
-        """Loads a pdb file into a molecule object. Only accepts atoms
+        """
+        Loads a .pdb file into a molecule object. Only accepts atoms
         with Cartesian coords through the ATOM/HETATM label and bonds
         through the CONECT label.
 
@@ -616,27 +636,77 @@ class Molecule:
             filename (string): The target file.
         """
 
-        with open(filename) as pdbfile:
-            for line in pdbfile:
-                if line[0:4] == "ATOM":
-                    idnum = int(line[6:11])
-                    atnum = ATOMIC_NUMBERS[line[76:78].strip().upper()]
-                    coords = np.array((float(line[30:38]), float(line[38:46]), 
-                                       float(line[46:54])))
-                    self.add_atom(Atom(atnum, coords, idnum))
+        try:
+            with open(filename) as pdbfile:
+                for line in pdbfile:
+                    if line[0:4] == "ATOM":
+                        idnum = int(line[6:11])
+                        atnum = ATOMIC_NUMBERS[line[76:78].strip().upper()]
+                        coords = np.array((float(line[30:38]), float(line[38:46]), 
+                                           float(line[46:54])))
+                        self.add_atom(Atom(atnum, coords, idnum))
+    
+                    elif line[0:6] == "HETATM":
+                        idnum = int(line[6:11])
+                        atnum = ATOMIC_NUMBERS[line[76:78].strip().upper()]
+                        coords = np.array((float(line[30:38]), float(line[38:46]), 
+                                           float(line[46:54])))
+                        self.add_atom(Atom(atnum, coords, idnum))
+    
+                    elif line[0:6] == "CONECT":
+    
+                        # Loads atoms as a list. First atom is bonded to the
+                        # remaining atoms (up to four).
+                        atoms = line[6:].split()
+                        for bonded_atom in atoms[1:]:
+                            self.add_bond(int(atoms[0]), int(bonded_atom))
+        except:
+            print("Error while reading .pdb file!")
+            
 
-                elif line[0:6] == "HETATM":
-                    idnum = int(line[6:11])
-                    atnum = ATOMIC_NUMBERS[line[76:78].strip().upper()]
-                    coords = np.array((float(line[30:38]), float(line[38:46]), 
-                                       float(line[46:54])))
-                    self.add_atom(Atom(atnum, coords, idnum))
+    def read_xyz(self, filename):
+        """
+        Loads an .xyz file into a molecule object. Since these files do not
+        contain bond information the bonds need to be calculated, e.g. based 
+        on their Van der Waals radii.
 
-                elif line[0:6] == "CONECT":
+        Args:
+            filename (string): The target file.
+        """
 
-                    # Loads atoms as a list. First atom is bonded to the
-                    # remaining atoms (up to four).
-                    atoms = line[6:].split()
-                    for bonded_atom in atoms[1:]:
-                        # print(atoms[0], bonded_atom)
-                        self.add_bond(int(atoms[0]), int(bonded_atom))
+        try:
+            # read atoms
+            with open(filename) as xyzfile:
+                line = xyzfile.readline()
+                natoms = int(line)
+                idnum = 0
+                if ( natoms > 0 ):
+                    # skip the comment line
+                    line = xyzfile.readline()
+                    for line in xyzfile:
+                        ls = line.strip().upper().split()
+                        idnum += 1
+                        atnum = ATOMIC_NUMBERS[ls[0]]
+                        coords = np.array((float(ls[1]), float(ls[2]), 
+                                           float(ls[3])))
+                        self.add_atom(Atom(atnum, coords, idnum))
+                        
+                        # break here (trajectory files might contain more data)
+                        if ( idnum >= natoms ):
+                            break;
+                        
+            # calculate bonds -- quick'n'dirty
+            for i in range(0, len(self.atoms)):
+                for j in range(0, i):
+                    bdist = ( RADII[self.atoms[i].at_num] + RADII[self.atoms[j].at_num] ) / 2.0
+                    rdist = ((self.atoms[i].location[0] - self.atoms[j].location[0])**2.0 + 
+                             (self.atoms[i].location[1] - self.atoms[j].location[1])**2.0 + 
+                             (self.atoms[i].location[2] - self.atoms[j].location[2])**2.0 )**0.5
+                    
+                    # there might be better ways
+                    if ( rdist < bdist ):
+                        self.add_bond(self.atoms[i].id_num, self.atoms[j].id_num)
+                
+        except:
+            print("Error while reading .xyz file!")
+            
