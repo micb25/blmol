@@ -20,6 +20,7 @@ To load a PDB file and to generate a stick model:
     m.draw_bonds(radius=0.5)
     
 To load an XYZ file and to generate a ball-and-stick model:
+
     import blmol
     m = blmol.Molecule()
     m.read_xyz('path/to/file.xyz')
