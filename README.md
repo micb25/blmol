@@ -1,6 +1,6 @@
 # blmol: A script for importing molecular geometries into Blender  
   
-blmol defines a molecule object that can be used to import molecular geometries (from a PDB file) into [Blender][]. It can be used to generate space filling, bond-only, and ball-and-stick models. The script includes definitions for simple default materials that can be used. These should be easily customized.  
+blmol defines a molecule object that can be used to import molecular geometries (from either a PDB or an XYZ file) into [Blender][]. It can be used to generate space filling, stick, and ball-and-stick models. The script includes definitions for simple default materials that can be used. These should be easily customized.  
   
 ## Installation  
   
@@ -20,6 +20,7 @@ To load a PDB file and to generate a stick model:
     m.draw_bonds(radius=0.5)
     
 To load an XYZ file and to generate a ball-and-stick model:
+
     import blmol
     m = blmol.Molecule()
     m.read_xyz('path/to/file.xyz')
