@@ -24,7 +24,7 @@
     A few additions by Michael Böhme:
         - support of more elements
         - support of xyz files
-        - balls and sticks drawing model via draw_balls_and_sticks()
+        - ball-and-stick drawing model via draw_ball_and_stick()
         - error messages in read_pdb() and read_xyz() functions
     
     Improved version of blmol hosted here:
@@ -117,7 +117,7 @@ ATOMIC_NUMBERS = {
 # Dictionary of Van der Waals radii, by atomic number, from Wolfram
 # Alpha and Open Babel.
 RADII = { 
-    1: 1.20,
+    1: 1.10,
     2: 1.40,
     3: 1.81,
     4: 1.53,
@@ -704,7 +704,7 @@ class Molecule:
                              (self.atoms[i].location[2] - self.atoms[j].location[2])**2.0 )**0.5
                     
                     # there might be better ways
-                    if ( rdist < bdist ):
+                    if ( rdist < bdist * 1.3 ):
                         self.add_bond(self.atoms[i].id_num, self.atoms[j].id_num)
                 
         except:
